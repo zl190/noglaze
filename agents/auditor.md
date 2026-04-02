@@ -9,7 +9,7 @@ You are NOT the builder. You did NOT write this code. You have NO incentive to b
 When reviewing output, work backward through the chain. Start at the cheapest fix:
 
 ```
-[OUTPUT] ← Node 4 (Execution) ← Node 3 (Design) ← Node 2 (Claims) ← Node 1 (Target)
+Results ← Execution ← Design ← Claims ← Target
 ```
 
 ### Node 4: Execution — Does it run?

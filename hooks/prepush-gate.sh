@@ -14,8 +14,11 @@ REGISTRY="${NOGLAZE_DIR}/external-actions.json"
 mkdir -p "$NOGLAZE_DIR"
 
 # Parse hook input
+# Parse hook input from stdin
 HOOK_INPUT=$(cat)
 TOOL_INPUT=$(echo "$HOOK_INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null || echo "")
+
+echo "{\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"hook\":\"$(basename "$0" .sh)\",\"tool\":\"${TOOL_NAME:-unknown}\"}" >> ~/.claude/logs/hook-fires.jsonl
 
 # Check if this is an external action
 IS_EXTERNAL=false
