@@ -1,0 +1,33 @@
+{
+  "description": "noglaze! hooks: output audit on Write/Edit, state checkpoint before compaction",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/audit-hook.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/precompact-checkpoint.sh",
+            "timeout": 5
+          },
+          {
+            "type": "prompt",
+            "prompt": "[noglaze! PreCompact] Audit state is being saved. After compaction, read ~/.noglaze/checkpoint.md to restore audit context. Do not skip quality checks — the audit trail persists even if your context doesn't."
+          }
+        ]
+      }
+    ]
+  }
+}

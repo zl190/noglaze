@@ -1,0 +1,9 @@
+{
+  "name": "noglaze",
+  "version": "0.1.0",
+  "description": "Output quality audit with hook enforcement. Stops your AI from glazing you.",
+  "author": "zl190",
+  "homepage": "https://github.com/zl190/noglaze",
+  "hooks": "hooks/hooks.json",
+  "agents": ["agents/auditor.md"]
+}
