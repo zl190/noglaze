@@ -18,7 +18,8 @@ mkdir -p "$NOGLAZE_DIR"
 HOOK_INPUT=$(cat)
 TOOL_INPUT=$(echo "$HOOK_INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null || echo "")
 
-echo "{\"ts\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"hook\":\"$(basename "$0" .sh)\",\"tool\":\"${TOOL_NAME:-unknown}\"}" >> ~/.claude/logs/hook-fires.jsonl
+jq -cn --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg hook "$(basename "$0" .sh)" \
+  '{ts: $ts, hook: $hook, tool: "Bash"}' >> ~/.claude/logs/hook-fires.jsonl 2>/dev/null || true
 
 # Check if this is an external action
 IS_EXTERNAL=false
@@ -55,7 +56,7 @@ fi
 
 # Check 2: no unresolved FLAGGED entries
 if [[ -f "$AUDIT_LOG" ]]; then
-    FLAGGED=$(grep -c '"flagged"' "$AUDIT_LOG" 2>/dev/null) || FLAGGED=0
+    FLAGGED=$(grep -ci '"flagged"' "$AUDIT_LOG" 2>/dev/null) || FLAGGED=0
     if [[ "$FLAGGED" -gt 0 ]]; then
         ERRORS+=("$FLAGGED flagged audit(s) unresolved. Fix before pushing.")
     fi
