@@ -128,7 +128,7 @@ MIT — use it, fork it, enforce it on your teammates.
 
 ## Origin
 
-Built after reading 513,000 lines of [Claude Code's publicly available source](https://github.com/anthropics/claude-code). The hook system (`PreToolUse`, `PostToolUse`, `exit 2`) is how Claude Code enforces its own safety — we applied the same pattern to output quality. First practice from source reading to shipped product.
+Hooks aren't new — git, CI/CD, and web middleware have used them forever. We rediscovered the pattern inside [Claude Code's source](https://github.com/anthropics/claude-code): `exit 2` blocks tool calls at the system level, surviving even when the model's context degrades. noglaze! is that pattern applied to output quality.
 
 Part of the [nano-agent-anatomy](https://github.com/zl190/nano-agent-anatomy) project: reading production agent source, rebuilding each layer, shipping what we learn.
 
