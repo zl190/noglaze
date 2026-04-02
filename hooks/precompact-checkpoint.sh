@@ -14,9 +14,9 @@ fi
 
 # Count audit stats
 TOTAL=$(wc -l < "$AUDIT_LOG" | tr -d ' ')
-PENDING=$(grep -c '"pending"' "$AUDIT_LOG" 2>/dev/null || echo "0")
-PASSED=$(grep -c '"passed"' "$AUDIT_LOG" 2>/dev/null || echo "0")
-FLAGGED=$(grep -c '"flagged"' "$AUDIT_LOG" 2>/dev/null || echo "0")
+PENDING=$(grep -c '"pending"' "$AUDIT_LOG" 2>/dev/null) || PENDING=0
+PASSED=$(grep -c '"passed"' "$AUDIT_LOG" 2>/dev/null) || PASSED=0
+FLAGGED=$(grep -c '"flagged"' "$AUDIT_LOG" 2>/dev/null) || FLAGGED=0
 
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 

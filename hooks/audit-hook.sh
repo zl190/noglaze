@@ -64,8 +64,8 @@ case "$EXTENSION" in
         ;;
 esac
 
-# Write audit entry
-jq -n \
+# Write audit entry (compact single-line JSONL)
+jq -cn \
     --arg ts "$TIMESTAMP" \
     --arg tool "$TOOL_NAME" \
     --arg file "$FILE_PATH" \
