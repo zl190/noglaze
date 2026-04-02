@@ -1,5 +1,5 @@
 #!/bin/bash
-# noglaze! PostToolUse audit hook
+# noGlaze! PostToolUse audit hook
 # Triggers after Write/Edit — checks if output survives adversarial review
 # exit 0 = pass (advisory log), exit 2 = block (enforcement)
 #
@@ -78,7 +78,7 @@ jq -n \
 # In enforcement mode, output the audit prompt for Claude to evaluate
 if [[ "$MODE" == "enforce" ]]; then
     cat <<PROMPT
-[noglaze! audit] File written: $FILE_PATH ($AUDIT_LEVEL)
+[noGlaze! audit] File written: $FILE_PATH ($AUDIT_LEVEL)
 
 Before proceeding, verify this output:
 1. Does the code/content do what it claims?

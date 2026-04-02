@@ -1,17 +1,17 @@
-# noglaze!
+# noGlaze!
 
 [![License](https://img.shields.io/github/license/zl190/noglaze?style=flat-square)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-orange?style=flat-square)](https://claude.ai/code)
 
-**PUA makes your AI work harder. noglaze! makes sure it's not just glazing you back.**
+**PUA makes your AI work harder. noGlaze! makes sure it's not just glazing you back.**
 
-Your AI will tell you the code is robust, handles edge cases, and is production-ready — right before it silently ignores half your requirements. noglaze! audits every Write/Edit at the system level. Bad output gets blocked. Not warned. Blocked.
+Your AI will tell you the code is robust, handles edge cases, and is production-ready — right before it silently ignores half your requirements. noGlaze! audits every Write/Edit at the system level. Bad output gets blocked. Not warned. Blocked.
 
 ---
 
 ## How it works
 
-Every time Claude writes or edits a file, noglaze! spawns an adversarial reviewer in a clean context — no memory of what Claude just said, no motivation to be nice. The reviewer runs a backward diagnosis chain:
+Every time Claude writes or edits a file, noGlaze! spawns an adversarial reviewer in a clean context — no memory of what Claude just said, no motivation to be nice. The reviewer runs a backward diagnosis chain:
 
 ```
 Results ← Execution ← Design ← Claims ← Target
@@ -19,7 +19,7 @@ Results ← Execution ← Design ← Claims ← Target
 
 If the output doesn't survive, `exit 2` fires and Claude Code blocks the tool call.
 
-**Before noglaze!**
+**Before noGlaze!**
 ```
 You: Write a function to parse CSV files
 AI: Here's a robust CSV parser with full error handling! [writes 30 lines]
@@ -28,15 +28,15 @@ AI: Here's a robust CSV parser with full error handling! [writes 30 lines]
     # (none of this is true)
 ```
 
-**After noglaze!**
+**After noGlaze!**
 ```
 You: Write a function to parse CSV files
 AI: [writes function]
-noglaze! 🚫 FLAGGED — no error handling for malformed rows,
+noGlaze! 🚫 FLAGGED — no error handling for malformed rows,
           no test for edge cases, claims "robust" in docstring
           but handles 0 edge cases. Prove it or revise.
 AI: [rewrites with actual error handling]
-noglaze! ✅ passed — 3 edge cases handled, docstring matches behavior
+noGlaze! ✅ passed — 3 edge cases handled, docstring matches behavior
 ```
 
 ---
@@ -70,16 +70,16 @@ Every audit is logged to `~/.noglaze/audit.jsonl` — timestamp, file, verdict, 
 
 [PUA](https://github.com/tanweai/pua) (10k ⭐) pressures the input side — it makes Claude try harder before giving up.
 
-noglaze! closes the loop on the output side.
+noGlaze! closes the loop on the output side.
 
 ```
 [PUA]      → "You have the skills, push through, try harder"
 [Claude]   → tries harder, writes something
-[noglaze!] → "Prove it. Exit 2."
+[noGlaze!] → "Prove it. Exit 2."
 [Claude]   → actually proves it
 ```
 
-Use them together: PUA to stop Claude from giving up, noglaze! to stop Claude from bullshitting.
+Use them together: PUA to stop Claude from giving up, noGlaze! to stop Claude from bullshitting.
 
 ---
 
@@ -128,7 +128,7 @@ MIT — use it, fork it, enforce it on your teammates.
 
 ## Origin
 
-Hooks aren't new — git, CI/CD, and web middleware have used them forever. We rediscovered the pattern inside [Claude Code's source](https://github.com/anthropics/claude-code): `exit 2` blocks tool calls at the system level, surviving even when the model's context degrades. noglaze! is that pattern applied to output quality.
+Hooks aren't new — git, CI/CD, and web middleware have used them forever. We rediscovered the pattern inside [Claude Code's source](https://github.com/anthropics/claude-code): `exit 2` blocks tool calls at the system level, surviving even when the model's context degrades. noGlaze! is that pattern applied to output quality.
 
 Part of the [nano-agent-anatomy](https://github.com/zl190/nano-agent-anatomy) project: reading production agent source, rebuilding each layer, shipping what we learn.
 

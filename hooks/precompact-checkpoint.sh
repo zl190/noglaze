@@ -1,5 +1,5 @@
 #!/bin/bash
-# noglaze! PreCompact hook — saves audit state before context compression
+# noGlaze! PreCompact hook — saves audit state before context compression
 # Learned from tanweai/pua's PreCompact pattern: state must survive compaction.
 
 NOGLAZE_DIR="${HOME}/.noglaze"
@@ -21,7 +21,7 @@ FLAGGED=$(grep -c '"flagged"' "$AUDIT_LOG" 2>/dev/null || echo "0")
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 cat > "$CHECKPOINT" <<EOF
-# noglaze! Checkpoint — $TIMESTAMP
+# noGlaze! Checkpoint — $TIMESTAMP
 
 ## Audit Stats
 - Total audits: $TOTAL
@@ -36,5 +36,5 @@ $(tail -5 "$AUDIT_LOG" | jq -r '"- \(.file) [\(.audit_level)] → \(.verdict)"' 
 Audit enforcement is active. Do not skip quality checks after compaction.
 EOF
 
-echo "[noglaze!] Checkpoint saved. $TOTAL audits ($FLAGGED flagged)."
+echo "[noGlaze!] Checkpoint saved. $TOTAL audits ($FLAGGED flagged)."
 exit 0

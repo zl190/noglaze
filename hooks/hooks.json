@@ -1,5 +1,5 @@
 {
-  "description": "noglaze! hooks: output audit on Write/Edit, state checkpoint before compaction",
+  "description": "noGlaze! hooks: output audit on Write/Edit, state checkpoint before compaction",
   "hooks": {
     "PostToolUse": [
       {
@@ -24,7 +24,7 @@
           },
           {
             "type": "prompt",
-            "prompt": "[noglaze! PreCompact] Audit state is being saved. After compaction, read ~/.noglaze/checkpoint.md to restore audit context. Do not skip quality checks — the audit trail persists even if your context doesn't."
+            "prompt": "[noGlaze! PreCompact] Audit state is being saved. After compaction, read ~/.noglaze/checkpoint.md to restore audit context. Do not skip quality checks — the audit trail persists even if your context doesn't."
           }
         ]
       }
