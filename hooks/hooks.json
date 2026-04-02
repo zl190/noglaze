@@ -1,6 +1,18 @@
 {
-  "description": "noGlaze! hooks: output audit on Write/Edit, state checkpoint before compaction",
+  "description": "noGlaze! hooks: output audit, pre-push gate, state checkpoint",
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/prepush-gate.sh",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Write|Edit",

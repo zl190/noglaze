@@ -59,6 +59,7 @@ That's it. No config required. Hooks activate on the next Claude Code session.
 
 | Hook | Trigger | Action |
 |------|---------|--------|
+| `PreToolUse` | `git push`, `gh repo create`, `gh pr create` | Blocks external actions if nothing was tested. Registry-based — add your own patterns. |
 | `PostToolUse` | Every `Write` or `Edit` | Spawns adversarial reviewer in clean context. `exit 2` blocks if it fails. |
 | `PreCompact` | Before context compression | Saves audit state to disk so findings survive the compaction. |
 
@@ -105,8 +106,10 @@ Run `cat ~/.noglaze/audit.jsonl | jq` to see your AI's track record.
 ## Roadmap
 
 - [x] PostToolUse hook — Write/Edit audit
+- [x] PreToolUse hook — pre-push gate (blocks untested pushes)
 - [x] PreCompact hook — state persistence
 - [x] JSONL audit trail
+- [x] Registry-based external action detection
 - [ ] `noglaze stats` — audit summary CLI
 - [ ] Configurable strictness levels (strict / default / lenient)
 - [ ] Per-project `.noglaze` config override

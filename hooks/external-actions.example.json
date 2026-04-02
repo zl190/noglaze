@@ -1,0 +1,8 @@
+[
+  "git push",
+  "gh repo create",
+  "gh pr create",
+  "gh release create",
+  "npm publish",
+  "docker push"
+]
