@@ -118,8 +118,21 @@ else
     fail "should have blocked gh repo create"
 fi
 
-# --- Test 10: checkpoint ---
-echo "[10] PreCompact checkpoint"
+# --- Test 10: registry-based matching (custom patterns) ---
+echo "[10] Pre-push gate — registry custom pattern"
+rm -f "$NOGLAZE_DIR/audit.jsonl"
+echo '["npm publish", "docker push"]' > "$NOGLAZE_DIR/external-actions.json"
+OUTPUT=$(echo '{"tool_input":{"command":"docker push myimage"}}' \
+  | bash "$HOOKS_DIR/prepush-gate.sh" 2>&1) && BLOCKED=false || BLOCKED=true
+rm -f "$NOGLAZE_DIR/external-actions.json"
+if [[ "$BLOCKED" == "true" ]] && echo "$OUTPUT" | grep -q "BLOCKED"; then
+    pass "registry caught docker push"
+else
+    fail "registry should have caught docker push"
+fi
+
+# --- Test 11: checkpoint ---
+echo "[11] PreCompact checkpoint"
 echo '{"tool_name":"Write","tool_input":{"file_path":"/tmp/t.py"}}' \
   | bash "$HOOKS_DIR/audit-hook.sh" >/dev/null 2>&1
 echo '{}' | bash "$HOOKS_DIR/precompact-checkpoint.sh" >/dev/null 2>&1
@@ -129,8 +142,8 @@ else
     fail "checkpoint missing or incomplete"
 fi
 
-# --- Test 11: JSONL format valid ---
-echo "[11] JSONL format validation"
+# --- Test 12: JSONL format valid ---
+echo "[12] JSONL format validation"
 INVALID=$(while IFS= read -r line; do echo "$line" | jq . >/dev/null 2>&1 || echo "BAD"; done < "$NOGLAZE_DIR/audit.jsonl")
 if [[ -z "$INVALID" ]]; then
     pass "all JSONL entries are valid JSON"
