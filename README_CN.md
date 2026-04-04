@@ -134,7 +134,7 @@ MIT
 
 Hook不是新东西——git、CI/CD、web中间件用了几十年。我们在[Claude Code的源码](https://github.com/anthropics/claude-code)中重新发现了这个模式：`exit 2`在系统层拦截工具调用，即使模型上下文退化也不受影响。noGlaze!就是把这个模式用在了输出质量上。
 
-属于 [nano-agent-anatomy](https://github.com/zl190/nano-agent-anatomy) 项目的一部分：读生产级Agent源码，逐层重建，把学到的东西做成产品。
+通过阅读生产级Agent源码、逐层重建，把学到的东西做成产品。
 
 ---
 

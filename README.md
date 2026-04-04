@@ -55,6 +55,22 @@ That's it. No config required. Hooks activate on the next Claude Code session.
 
 ---
 
+## Quick Start
+
+1. Install (see above).
+2. Open a Claude Code session — hooks are active automatically.
+3. Ask Claude to write or edit any file. noGlaze! intercepts the result and runs a blind review.
+4. If the output doesn't match its own claims, `exit 2` fires and Claude is forced to revise before the file is written.
+5. Check your audit log anytime:
+
+```bash
+cat ~/.noglaze/audit.jsonl | jq
+```
+
+No prompts to write. No config to tune. It runs in the background on every session.
+
+---
+
 ## What it does
 
 | Hook | Trigger | Action |
@@ -133,7 +149,7 @@ MIT — use it, fork it, enforce it on your teammates.
 
 Hooks aren't new — git, CI/CD, and web middleware have used them forever. We rediscovered the pattern inside [Claude Code's source](https://github.com/anthropics/claude-code): `exit 2` blocks tool calls at the system level, surviving even when the model's context degrades. noGlaze! is that pattern applied to output quality.
 
-Part of the [nano-agent-anatomy](https://github.com/zl190/nano-agent-anatomy) project: reading production agent source, rebuilding each layer, shipping what we learn.
+Built by reading production agent source, rebuilding each layer, and shipping what we learn.
 
 ---
 
