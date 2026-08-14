@@ -18,8 +18,14 @@ mkdir -p "$NOGLAZE_DIR"
 HOOK_INPUT=$(cat)
 TOOL_INPUT=$(echo "$HOOK_INPUT" | jq -r '.tool_input.command // empty' 2>/dev/null || echo "")
 
-jq -cn --arg ts "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --arg hook "$(basename "$0" .sh)" \
-  '{ts: $ts, hook: $hook, tool: "Bash"}' >> ~/.claude/logs/hook-fires.jsonl 2>/dev/null || true
+# gate fire/catch logging (lib/gate-log.sh). Guarded: a missing lib must never
+# disable a load-bearing gate — it degrades to no-ops, not to an open door.
+if [ -r "$HOME/.claude/scripts/lib/gate-log.sh" ]; then
+  . "$HOME/.claude/scripts/lib/gate-log.sh"
+else
+  gate_fire() { :; }; gate_catch() { :; }
+fi
+gate_fire "$(basename "$0" .sh)" "Bash"
 
 # Check if this is an external action
 IS_EXTERNAL=false
@@ -92,6 +98,7 @@ if [[ ${#ERRORS[@]} -gt 0 ]]; then
     done
     echo "" >&2
     echo "Fix these issues, then try again." >&2
+    gate_catch "prepush-gate" "" "block"
     exit 2
 fi
 
