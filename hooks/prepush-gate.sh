@@ -27,13 +27,20 @@ else
 fi
 gate_fire "$(basename "$0" .sh)" "Bash"
 
-# Check if this is an external action
+# Check if this is an external action.
+# Segment-start matching, NOT a whole-string leading anchor: real commands arrive as
+# `cd repo && git push -q …` or `GH_HOST=github.com gh repo create …`, which a
+# `case "git push*"` never matches (912 fires / 0 detections on 2026-08-19 before this
+# fix — failure mode identical to "not installed", zero signal). Pattern borrowed
+# verbatim from outbound-gate-bash.sh (its 2026-08-17 fix for the same disease); see
+# feedback_gate-trigger-surface.
+ASSIGN="([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+|env[[:space:]]+|command[[:space:]]+)*"
+START="(^|[;&|(\"']|&&|\\|\\|)[[:space:]]*$ASSIGN"
 IS_EXTERNAL=false
-case "$TOOL_INPUT" in
-    git\ push*|gh\ repo\ create*|gh\ pr\ create*|gh\ release\ create*)
-        IS_EXTERNAL=true
-        ;;
-esac
+if echo "$TOOL_INPUT" | grep -qE "${START}git[[:space:]]+push([[:space:]]|$)" \
+   || echo "$TOOL_INPUT" | grep -qE "${START}gh[[:space:]]+(repo|pr|release)[[:space:]]+create([[:space:]]|$)"; then
+    IS_EXTERNAL=true
+fi
 
 # Also check registry for custom patterns
 if [[ -f "$REGISTRY" ]] && [[ "$IS_EXTERNAL" == "false" ]]; then
