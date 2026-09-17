@@ -62,8 +62,19 @@ fi
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 ERRORS=()
 
-# Check 1: audit log exists (something was tested)
-if [[ ! -f "$AUDIT_LOG" ]] || [[ ! -s "$AUDIT_LOG" ]]; then
+# Real audit entries only. The gate appends its own {"type":"prepush_gate"} line on
+# every run (blocks included), stamped today — counting those as evidence means one
+# blocked attempt satisfies the very next retry with no testing done (observed
+# 2026-09-17 on smile-journey#34). Line-wise `fromjson?` so one malformed line
+# cannot hide the rest of the log.
+LAST_AUDIT=""
+if [[ -s "$AUDIT_LOG" ]]; then
+    LAST_AUDIT=$(jq -cR 'fromjson? | objects | select(.type != "prepush_gate")' \
+        "$AUDIT_LOG" 2>/dev/null | tail -1) || LAST_AUDIT=""
+fi
+
+# Check 1: audit trail exists (something was tested) — gate-only logs do not count
+if [[ -z "$LAST_AUDIT" ]]; then
     ERRORS+=("No audit trail found. Nothing has been tested this session.")
 fi
 
@@ -75,9 +86,9 @@ if [[ -f "$AUDIT_LOG" ]]; then
     fi
 fi
 
-# Check 3: at least one audit in the last 30 minutes
-if [[ -f "$AUDIT_LOG" ]]; then
-    RECENT=$(tail -1 "$AUDIT_LOG" | jq -r '.timestamp // empty' 2>/dev/null || echo "")
+# Check 3: the most recent REAL audit entry is from today
+if [[ -n "$LAST_AUDIT" ]]; then
+    RECENT=$(printf '%s' "$LAST_AUDIT" | jq -r '.timestamp // empty' 2>/dev/null || echo "")
     if [[ -n "$RECENT" ]]; then
         # Compare timestamps (basic: just check date matches today)
         TODAY=$(date -u +"%Y-%m-%d")
