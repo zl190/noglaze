@@ -27,13 +27,20 @@ else
 fi
 gate_fire "$(basename "$0" .sh)" "Bash"
 
-# Check if this is an external action
+# Check if this is an external action.
+# Segment-start matching, NOT a whole-string leading anchor: real commands arrive as
+# `cd repo && git push -q …` or `GH_HOST=github.com gh repo create …`, which a
+# `case "git push*"` never matches (912 fires / 0 detections on 2026-08-19 before this
+# fix — failure mode identical to "not installed", zero signal). Pattern borrowed
+# verbatim from outbound-gate-bash.sh (its 2026-08-17 fix for the same disease); see
+# feedback_gate-trigger-surface.
+ASSIGN="([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*[[:space:]]+|env[[:space:]]+|command[[:space:]]+)*"
+START="(^|[;&|(\"']|&&|\\|\\|)[[:space:]]*$ASSIGN"
 IS_EXTERNAL=false
-case "$TOOL_INPUT" in
-    git\ push*|gh\ repo\ create*|gh\ pr\ create*|gh\ release\ create*)
-        IS_EXTERNAL=true
-        ;;
-esac
+if echo "$TOOL_INPUT" | grep -qE "${START}git[[:space:]]+push([[:space:]]|$)" \
+   || echo "$TOOL_INPUT" | grep -qE "${START}gh[[:space:]]+(repo|pr|release)[[:space:]]+create([[:space:]]|$)"; then
+    IS_EXTERNAL=true
+fi
 
 # Also check registry for custom patterns
 if [[ -f "$REGISTRY" ]] && [[ "$IS_EXTERNAL" == "false" ]]; then
@@ -55,8 +62,19 @@ fi
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 ERRORS=()
 
-# Check 1: audit log exists (something was tested)
-if [[ ! -f "$AUDIT_LOG" ]] || [[ ! -s "$AUDIT_LOG" ]]; then
+# Real audit entries only. The gate appends its own {"type":"prepush_gate"} line on
+# every run (blocks included), stamped today — counting those as evidence means one
+# blocked attempt satisfies the very next retry with no testing done (observed
+# 2026-09-17 on smile-journey#34). Line-wise `fromjson?` so one malformed line
+# cannot hide the rest of the log.
+LAST_AUDIT=""
+if [[ -s "$AUDIT_LOG" ]]; then
+    LAST_AUDIT=$(jq -cR 'fromjson? | objects | select(.type != "prepush_gate")' \
+        "$AUDIT_LOG" 2>/dev/null | tail -1) || LAST_AUDIT=""
+fi
+
+# Check 1: audit trail exists (something was tested) — gate-only logs do not count
+if [[ -z "$LAST_AUDIT" ]]; then
     ERRORS+=("No audit trail found. Nothing has been tested this session.")
 fi
 
@@ -68,9 +86,9 @@ if [[ -f "$AUDIT_LOG" ]]; then
     fi
 fi
 
-# Check 3: at least one audit in the last 30 minutes
-if [[ -f "$AUDIT_LOG" ]]; then
-    RECENT=$(tail -1 "$AUDIT_LOG" | jq -r '.timestamp // empty' 2>/dev/null || echo "")
+# Check 3: the most recent REAL audit entry is from today
+if [[ -n "$LAST_AUDIT" ]]; then
+    RECENT=$(printf '%s' "$LAST_AUDIT" | jq -r '.timestamp // empty' 2>/dev/null || echo "")
     if [[ -n "$RECENT" ]]; then
         # Compare timestamps (basic: just check date matches today)
         TODAY=$(date -u +"%Y-%m-%d")

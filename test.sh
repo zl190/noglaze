@@ -341,6 +341,60 @@ else
     fail "push should be allowed with only PASS entries"
 fi
 
+# --- Tests 26-29: the gate's own log lines are not test evidence ---
+# Regression for 2026-09-17 (smile-journey#34): Check 3 read only the LAST line of
+# audit.jsonl, and the gate appends a {"type":"prepush_gate"} line stamped today on
+# every block — so a blocked attempt made the immediate retry pass with nothing tested.
+# Commands below are the shapes that really arrive (cd prefix, env-var prefix,
+# --base/--body-file, trailing && echo), not the bare `git push origin main`.
+REAL_PR='cd ~/Developer/agent/codex/smile-journey-owner-activation-app && GH_HOST=github.com gh pr create --base dev --head codex/owner-activation-app --title "Add owner activation" --body-file /tmp/pr-app.md && echo done'
+REAL_PUSH='cd ~/Developer/agent/codex/smile-journey-owner-activation-app && git push -u origin codex/owner-activation-app 2>&1 | tail -3; echo "RC=$?"'
+fire() { jq -cn --arg c "$1" '{tool_name:"Bash",cwd:"/Users/x/Workspace",tool_input:{command:$c}}' \
+           | bash "$HOOKS_DIR/prepush-gate.sh" 2>&1; }
+
+echo "[26] Pre-push gate — stale audit: blocked, and the retry is blocked too"
+rm -f "$NOGLAZE_DIR/audit.jsonl"
+jq -cn '{timestamp:"2020-01-01T00:00:00Z",tool:"Edit",file:"/tmp/t.py",audit_level:"code",verdict:"PASS"}' \
+  >> "$NOGLAZE_DIR/audit.jsonl"
+OUT1=$(fire "$REAL_PR") && FIRST=passed || FIRST=blocked
+OUT2=$(fire "$REAL_PR") && SECOND=passed || SECOND=blocked
+if [[ "$FIRST" == "blocked" && "$SECOND" == "blocked" ]] && echo "$OUT2" | grep -q "2020-01-01"; then
+    pass "retry after a block is still blocked (names the stale audit date)"
+else
+    fail "retry after a block must stay blocked (first=$FIRST second=$SECOND)"
+fi
+
+echo "[27] Pre-push gate — stale audit: a different external action right after a block"
+OUT=$(fire "$REAL_PUSH") && THIRD=passed || THIRD=blocked
+if [[ "$THIRD" == "blocked" ]]; then
+    pass "git push after blocked gh pr create is still blocked"
+else
+    fail "gate lines from earlier blocks must not satisfy a later push"
+fi
+
+echo "[28] Pre-push gate — log holding only gate lines is not an audit trail"
+rm -f "$NOGLAZE_DIR/audit.jsonl"
+OUT1=$(fire "$REAL_PUSH") && FIRST=passed || FIRST=blocked
+OUT2=$(fire "$REAL_PUSH") && SECOND=passed || SECOND=blocked
+if [[ "$FIRST" == "blocked" && "$SECOND" == "blocked" ]] && echo "$OUT2" | grep -q "No audit trail"; then
+    pass "retry with no real audit entry is still blocked"
+else
+    fail "gate-only log must not count as an audit trail (first=$FIRST second=$SECOND)"
+fi
+
+echo "[29] Pre-push gate — today's real audit still passes with gate lines after it"
+rm -f "$NOGLAZE_DIR/audit.jsonl"
+NOW_TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+jq -cn --arg ts "$NOW_TS" '{timestamp:$ts,tool:"Edit",file:"/tmp/t.py",audit_level:"code",verdict:"PASS"}' \
+  >> "$NOGLAZE_DIR/audit.jsonl"
+OUT1=$(fire "$REAL_PR") && FIRST=passed || FIRST=blocked
+OUT2=$(fire "$REAL_PUSH") && SECOND=passed || SECOND=blocked
+if [[ "$FIRST" == "passed" && "$SECOND" == "passed" ]]; then
+    pass "real audit from today is found behind the gate's own lines"
+else
+    fail "today's real audit should pass both actions (first=$FIRST second=$SECOND)"
+fi
+
 # --- Summary ---
 echo ""
 echo "==================="
