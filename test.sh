@@ -1,6 +1,8 @@
 #!/bin/bash
 # noGlaze! test suite — run after any hook change
 set -e
+# Audits run synchronously so each assertion sees its log entry.
+export NOGLAZE_SYNC=1
 
 NOGLAZE_DIR="${HOME}/.noglaze"
 HOOKS_DIR="$(cd "$(dirname "$0")/hooks" && pwd)"
