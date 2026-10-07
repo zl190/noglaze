@@ -1,5 +1,7 @@
 # noGlaze!
 
+> **Retired 2026-10-07.** A log audit found the per-edit auditor never produced a verdict (10,591 entries, 0 flagged, 0 auditor output; 6,218 spawns, 0 tokens) and the pre-push gate therefore checked only "a file was edited today". Hooks removed from the owner's rig. Code kept for reference.
+
 [![License](https://img.shields.io/github/license/zl190/noglaze?style=flat-square)](LICENSE)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin-orange?style=flat-square)](https://claude.ai/code)
 
