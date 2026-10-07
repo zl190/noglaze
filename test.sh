@@ -341,6 +341,22 @@ else
     fail "push should be allowed with only PASS entries"
 fi
 
+# --- Test 26: gate's own blocked entry is not test evidence ---
+echo "[26] Pre-push gate — own blocked entry dated today does not satisfy check 3"
+rm -f "$NOGLAZE_DIR/audit.jsonl"
+YESTERDAY_TS=$(date -u -v-1d +"%Y-%m-%dT%H:%M:%SZ" 2>/dev/null || date -u -d "yesterday" +"%Y-%m-%dT%H:%M:%SZ")
+NOW_TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+# Real audit yesterday, then the gate's own blocked verdict from a retry today
+jq -cn --arg ts "$YESTERDAY_TS" '{timestamp:$ts,tool:"Write",file:"/tmp/old.py",verdict:"PASS"}' >> "$NOGLAZE_DIR/audit.jsonl"
+jq -cn --arg ts "$NOW_TS" '{timestamp:$ts,type:"prepush_gate",action:"git push origin main",verdict:"blocked",errors:"Last audit was yesterday"}' >> "$NOGLAZE_DIR/audit.jsonl"
+OUTPUT=$(echo '{"tool_input":{"command":"git push origin main"}}' \
+  | bash "$HOOKS_DIR/prepush-gate.sh" 2>&1) && BLOCKED=false || BLOCKED=true
+if [[ "$BLOCKED" == "true" ]] && echo "$OUTPUT" | grep -q "not today"; then
+    pass "retry after a block still blocks (gate entry ignored)"
+else
+    fail "gate's own prepush_gate entry must not count as a fresh audit"
+fi
+
 # --- Summary ---
 echo ""
 echo "==================="

@@ -75,11 +75,16 @@ if [[ -f "$AUDIT_LOG" ]]; then
     fi
 fi
 
-# Check 3: at least one audit in the last 30 minutes
+# Check 3: the most recent *audit* entry is dated today (UTC).
+# Only entries written by the audit hook count as test evidence. This gate's own
+# verdict entries (type "prepush_gate", appended below on every run, blocked or
+# not) are excluded: before 2026-10-07 `tail -1` read the gate's own blocked
+# entry from the previous attempt, so one block followed by a retry passed with
+# no new audit (observed 2026-10-06: blocked 00:41:29Z, passed 00:43:12Z).
 if [[ -f "$AUDIT_LOG" ]]; then
-    RECENT=$(tail -1 "$AUDIT_LOG" | jq -r '.timestamp // empty' 2>/dev/null || echo "")
+    RECENT=$(jq -r 'select(.type != "prepush_gate") | .timestamp // empty' "$AUDIT_LOG" 2>/dev/null | tail -1 || echo "")
     if [[ -n "$RECENT" ]]; then
-        # Compare timestamps (basic: just check date matches today)
+        # Same UTC calendar date as now (not a rolling window).
         TODAY=$(date -u +"%Y-%m-%d")
         AUDIT_DATE=$(echo "$RECENT" | cut -d'T' -f1)
         if [[ "$AUDIT_DATE" != "$TODAY" ]]; then
